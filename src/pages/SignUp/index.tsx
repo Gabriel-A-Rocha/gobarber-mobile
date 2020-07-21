@@ -40,48 +40,51 @@ const SignUp: React.FC = () => {
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
 
-  const handleSignUp = useCallback(async (data: SignUpFormData) => {
-    try {
-      // reset errors
-      formRef.current?.setErrors({});
+  const handleSignUp = useCallback(
+    async (data: SignUpFormData) => {
+      try {
+        // reset errors
+        formRef.current?.setErrors({});
 
-      console.log(data);
+        console.log(data);
 
-      const schema = Yup.object().shape({
-        name: Yup.string().required('Nome obrigatório'),
-        email: Yup.string()
-          .required('Email obrigatório')
-          .email('Digite um email válido'),
-        password: Yup.string().required('Senha obrigatória'),
-      });
+        const schema = Yup.object().shape({
+          name: Yup.string().required('Nome obrigatório'),
+          email: Yup.string()
+            .required('Email obrigatório')
+            .email('Digite um email válido'),
+          password: Yup.string().required('Senha obrigatória'),
+        });
 
-      await schema.validate(data, {
-        abortEarly: false,
-      });
+        await schema.validate(data, {
+          abortEarly: false,
+        });
 
-      await api.post('/users', data);
+        await api.post('/users', data);
 
-      Alert.alert(
-        'Cadastro realizado com sucesso!',
-        'Você já pode fazer login na aplicação!',
-      );
-
-      navigation.goBack();
-    } catch (err) {
-      // check if it's a format error
-      if (err instanceof Yup.ValidationError) {
-        const errors = getValidationErrors(err);
-
-        formRef.current?.setErrors(errors);
-      } else {
-        // in case of wrong information, display a visual message
         Alert.alert(
-          'Erro no cadastro',
-          'Ocorreu um erro no cadastro. Tente novamente.',
+          'Cadastro realizado com sucesso!',
+          'Você já pode fazer login na aplicação!',
         );
+
+        navigation.goBack();
+      } catch (err) {
+        // check if it's a format error
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          formRef.current?.setErrors(errors);
+        } else {
+          // in case of wrong information, display a visual message
+          Alert.alert(
+            'Erro no cadastro',
+            'Ocorreu um erro no cadastro. Tente novamente.',
+          );
+        }
       }
-    }
-  }, []);
+    },
+    [navigation],
+  );
 
   return (
     <>

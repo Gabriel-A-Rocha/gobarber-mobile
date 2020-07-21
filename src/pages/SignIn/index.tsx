@@ -16,6 +16,8 @@ import * as Yup from 'yup';
 import { Form } from '@unform/mobile';
 import { FormHandles } from '@unform/core';
 
+import { useAuth } from '../../hooks/auth';
+
 import getValidationErrors from '../../utils/getValidationErrors';
 
 import Input from '../../components/Input';
@@ -43,44 +45,47 @@ const SignIn: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const handleSignIn = useCallback(async (data: SignInFormData) => {
-    try {
-      // reset errors
-      formRef.current?.setErrors({});
+  const { signIn, user } = useAuth();
 
-      const schema = Yup.object().shape({
-        email: Yup.string()
-          .required('Email obrigatório')
-          .email('Digite um email válido'),
-        password: Yup.string().required('Senha obrigatória'),
-      });
+  const handleSignIn = useCallback(
+    async (data: SignInFormData) => {
+      try {
+        // reset errors
+        formRef.current?.setErrors({});
 
-      await schema.validate(data, {
-        abortEarly: false,
-      });
+        const schema = Yup.object().shape({
+          email: Yup.string()
+            .required('Email obrigatório')
+            .email('Digite um email válido'),
+          password: Yup.string().required('Senha obrigatória'),
+        });
 
-      /* await signIn({
+        await schema.validate(data, {
+          abortEarly: false,
+        });
+
+        await signIn({
           email: data.email,
           password: data.password,
-        }); */
+        });
+      } catch (err) {
+        // check if it is a validation error (wrong format)
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
 
-      /* history.push('/dashboard'); */
-    } catch (err) {
-      // check if it is a validation error (wrong format)
-      if (err instanceof Yup.ValidationError) {
-        const errors = getValidationErrors(err);
+          formRef.current?.setErrors(errors);
+          return;
+        }
 
-        formRef.current?.setErrors(errors);
-        return;
+        // in case of wrong information, display a visual message
+        Alert.alert(
+          'Erro na autenticação',
+          'Ocorreu um erro no login. Verifique as credenciais.',
+        );
       }
-
-      // in case of wrong information, display a visual message
-      Alert.alert(
-        'Erro na autenticação',
-        'Ocorreu um erro no login. Verifique as credenciais.',
-      );
-    }
-  }, []);
+    },
+    [signIn],
+  );
 
   return (
     <>
