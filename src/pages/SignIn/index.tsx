@@ -68,6 +68,8 @@ const SignIn: React.FC = () => {
           email: data.email,
           password: data.password,
         });
+
+        console.log(user);
       } catch (err) {
         // check if it is a validation error (wrong format)
         if (err instanceof Yup.ValidationError) {
@@ -84,7 +86,7 @@ const SignIn: React.FC = () => {
         );
       }
     },
-    [signIn],
+    [signIn, user],
   );
 
   return (
