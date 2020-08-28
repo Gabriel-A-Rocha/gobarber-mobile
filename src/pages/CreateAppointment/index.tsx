@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import Icon from 'react-native-vector-icons/Feather';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import { format } from 'date-fns';
 import { useAuth } from '../../hooks/auth';
 import api from '../../services/api';
@@ -29,6 +29,8 @@ import {
   SectionContent,
   Hour,
   HourText,
+  CreateAppointmentButton,
+  CreateAppointmentButtonText,
 } from './styles';
 
 interface RouteParams {
@@ -49,7 +51,7 @@ interface AvailabilityItem {
 const CreateAppointment: React.FC = () => {
   const { user } = useAuth();
   const route = useRoute();
-  const { goBack } = useNavigation();
+  const { goBack, navigate } = useNavigation();
 
   // routeParams carry the id from provider clicked in the dashboard
   const routeParams = route.params as RouteParams;
@@ -138,6 +140,29 @@ const CreateAppointment: React.FC = () => {
     setSelectedHour(hour);
   }, []);
 
+  const handleCreateAppointment = useCallback(async () => {
+    try {
+      const date = new Date(selectedDate);
+
+      date.setHours(selectedHour);
+      date.setMinutes(0);
+
+      await api.post('/appointments', {
+        provider_id: selectedProvider,
+        date,
+      });
+
+      navigate('AppointmentCreated', {
+        date: date.getTime(),
+      });
+    } catch (error) {
+      Alert.alert(
+        'Appointment schedule error',
+        'An error occurred while processing your request. Please try again.',
+      );
+    }
+  }, [navigate, selectedDate, selectedHour, selectedProvider]);
+
   return (
     <Container>
       <Header>
@@ -172,11 +197,11 @@ const CreateAppointment: React.FC = () => {
         </ProvidersListContainer>
 
         <Calendar>
-          <Title>Choose the date</Title>
+          <Title>Select a date</Title>
 
           <OpenDatePickerButton onPress={handleToggleDatePicker}>
             <OpenDatePickerButtonText>
-              Select other date
+              Pick another date
             </OpenDatePickerButtonText>
           </OpenDatePickerButton>
 
@@ -191,7 +216,7 @@ const CreateAppointment: React.FC = () => {
         </Calendar>
 
         <Schedule>
-          <Title>Select the time</Title>
+          <Title>Select a time</Title>
 
           <Section>
             <SectionTitle>Morning</SectionTitle>
@@ -235,6 +260,10 @@ const CreateAppointment: React.FC = () => {
             </SectionContent>
           </Section>
         </Schedule>
+
+        <CreateAppointmentButton onPress={handleCreateAppointment}>
+          <CreateAppointmentButtonText>Schedule</CreateAppointmentButtonText>
+        </CreateAppointmentButton>
       </Content>
     </Container>
   );
